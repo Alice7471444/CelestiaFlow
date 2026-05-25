@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>CelestiaFlow</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; touch-action: manipulation; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0A0A1A;
+      color: white;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* App Container */
+    .app { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
+    
+    /* Header */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 12px 16px;
+      background: rgba(20,20,40,0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #00b4d8, #9d4edd);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text { font-size: 18px; font-weight: 600; background: linear-gradient(135deg, white, #00b4d8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-btn {
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      color: white; font-size: 18px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .header-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
+    
+    /* Main Content */
+    .main { flex: 1; padding: 70px 16px 120px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    
+    /* Hero */
+    .hero { text-align: center; padding: 40px 20px; }
+    .hero-title { font-size: 42px; font-weight: 700; background: linear-gradient(135deg, white, #00b4d8, #9d4edd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+    .hero-sub { font-size: 16px; color: rgba(255,255,255,0.6); margin-bottom: 30px; }
+    
+    /* Liquid Display */
+    .liquid-display { text-align: center; padding: 30px; margin: 20px 0; }
+    .liquid-icon { font-size: 80px; margin-bottom: 10px; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    .liquid-name { font-size: 24px; font-weight: 500; }
+    .liquid-type { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 5px; }
+    
+    /* Cards */
+    .card {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 16px; margin: 10px 0;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .card:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
+    
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+    .stat-box { text-align: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 15px; }
+    .stat-value { font-size: 24px; font-weight: 700; }
+    .stat-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+    
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,10,26,0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding: 8px 16px 25px;
+      display: flex; justify-content: space-around;
+    }
+    .nav-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: none; border: none; color: rgba(255,255,255,0.5);
+      padding: 8px 16px; border-radius: 12px; cursor: pointer;
+      font-size: 24px; transition: all 0.2s;
+    }
+    .nav-btn.active { color: #00b4d8; }
+    .nav-btn:active { background: rgba(255,255,255,0.1); }
+    .nav-label { font-size: 10px; }
+    
+    /* Panel (Slide-in) */
+    .panel-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6); z-index: 200;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .panel-overlay.active { opacity: 1; pointer-events: auto; }
+    
+    .panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 100%; max-width: 380px;
+      background: rgba(15,15,30,0.98);
+      backdrop-filter: blur(30px);
+      border-left: 1px solid rgba(255,255,255,0.1);
+      z-index: 300; transform: translateX(100%); transition: transform 0.3s ease;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+    .panel.active { transform: translateX(0); }
+    
+    .panel-header {
+      padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; background: rgba(15,15,30,0.98); z-index: 10;
+    }
+    .panel-title { font-size: 20px; font-weight: 600; }
+    .panel-close {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.1); border: none; border-radius: 50%;
+      color: white; font-size: 18px; cursor: pointer;
+    }
+    .panel-close:active { background: rgba(255,255,255,0.2); }
+    .panel-body { padding: 20px; }
+    
+    /* Section Title */
+    .section-title { font-size: 14px; color: rgba(255,255,255,0.6); margin: 15px 0 10px; }
+    
+    /* Liquid Grid */
+    .liquid-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .liquid-option {
+      aspect-ratio: 1; border-radius: 15px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+      background: rgba(255,255,255,0.05); border: 2px solid transparent;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .liquid-option:active { transform: scale(0.95); }
+    .liquid-option.selected { border-color: #00b4d8; background: rgba(0,180,216,0.15); }
+    .liquid-option .icon { font-size: 24px; }
+    .liquid-option .name { font-size: 9px; color: rgba(255,255,255,0.7); }
+    
+    /* Color Pickers */
+    .color-row { display: flex; gap: 15px; margin: 15px 0; }
+    .color-box { flex: 1; }
+    .color-label { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+    .color-input {
+      width: 100%; height: 50px; border: none; border-radius: 12px;
+      cursor: pointer; background: transparent;
+    }
+    .color-input::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-input::-webkit-color-swatch { border: none; border-radius: 12px; }
+    
+    /* Sliders */
+    .slider-box { margin: 15px 0; }
+    .slider-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+    .slider-val { color: #00b4d8; }
+    input[type="range"] {
+      width: 100%; height: 8px; border-radius: 4px;
+      background: rgba(255,255,255,0.1); -webkit-appearance: none; outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 24px; height: 24px;
+      border-radius: 50%; background: linear-gradient(135deg, #00b4d8, #9d4edd); cursor: pointer;
+    }
+    
+    /* Widget Grid */
+    .widget-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .widget-btn {
+      padding: 15px 10px; text-align: center;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 15px; cursor: pointer; transition: all 0.2s;
+    }
+    .widget-btn:active { transform: scale(0.95); background: rgba(0,180,216,0.2); }
+    .widget-btn .icon { font-size: 28px; }
+    .widget-btn .name { font-size: 11px; margin-top: 5px; }
+    
+    /* Active Widgets List */
+    .widget-list { margin-top: 20px; }
+    .widget-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 15px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 8px;
+    }
+    .widget-info { display: flex; align-items: center; gap: 10px; }
+    .widget-info .icon { font-size: 20px; }
+    .widget-del {
+      width: 28px; height: 28px;
+      background: rgba(255,0,0,0.2); border: none; border-radius: 50%;
+      color: #ff6b6b; font-size: 14px; cursor: pointer;
+    }
+    
+    /* Game Grid */
+    .game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .game-card {
+      padding: 20px; text-align: center;
+      background: rgba(255,255,255,0.05); border-radius: 20px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .game-card:active { transform: scale(0.95); }
+    .game-card .icon { font-size: 40px; margin-bottom: 10px; }
+    .game-card .name { font-size: 14px; font-weight: 500; margin-bottom: 5px; }
+    .game-card .desc { font-size: 11px; color: rgba(255,255,255,0.5); }
+    
+    /* Stats Panel */
+    .stat-card {
+      padding: 20px; text-align: center;
+      background: rgba(255,255,255,0.03); border-radius: 15px;
+    }
+    .stat-card .value { font-size: 28px; font-weight: 700; color: #00b4d8; }
+    .stat-card .label { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 5px; }
+    
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(0,180,216,0.95);
+      padding: 12px 24px; border-radius: 25px;
+      font-size: 14px; z-index: 400;
+      opacity: 0; transition: all 0.3s;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    
+    /* Button Styles */
+    .btn {
+      width: 100%; padding: 14px;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 15px; color: white; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; margin: 8px 0;
+    }
+    .btn:active { transform: scale(0.98); background: rgba(255,255,255,0.15); }
+    .btn-primary { background: linear-gradient(135deg, #00b4d8, #0077b6); border: none; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="logo-icon">✨</div>
+        <div class="logo-text">CelestiaFlow</div>
+      </div>
+      <button class="header-btn" id="settingsBtn">⚙️</button>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main" id="mainContent">
+      <div class="hero">
+        <h1 class="hero-title">CelestiaFlow</h1>
+        <p class="hero-sub">Liquid Glass Experience</p>
+      </div>
+      
+      <!-- Liquid Display -->
+      <div class="liquid-display card">
+        <div class="liquid-icon" id="liquidIcon">💧</div>
+        <div class="liquid-name" id="liquidName">Water</div>
+        <div class="liquid-type" id="liquidType">Tap Customize to change</div>
+      </div>
+      
+      <!-- Quick Actions -->
+      <div class="card" onclick="openPanel('games')">
+        <div style="font-size: 30px; margin-bottom: 8px;">🎮</div>
+        <div style="font-size: 16px; font-weight: 500;">Mini Games</div>
+        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Tap to play</div>
+      </div>
+      
+      <div class="card" onclick="openPanel('widgets')">
+        <div style="font-size: 30px; margin-bottom: 8px;">📊</div>
+        <div style="font-size: 16px; font-weight: 500;">Widgets</div>
+        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Add to your screen</div>
+      </div>
+      
+      <div class="card" onclick="randomLiquid()">
+        <div style="font-size: 30px; margin-bottom: 8px;">🎲</div>
+        <div style="font-size: 16px; font-weight: 500;">Surprise Me</div>
+        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Random liquid</div>
+      </div>
+      
+      <!-- Stats -->
+      <div class="card">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-value" id="timeSpent" style="color: #00b4d8;">0m</div>
+            <div class="stat-label">Time</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="gamesCount" style="color: #9d4edd;">0</div>
+            <div class="stat-label">Games</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="widgetCount" style="color: #f72585;">0</div>
+            <div class="stat-label">Widgets</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <button class="nav-btn active" onclick="showHome()">
+        <span>🏠</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn" onclick="openPanel('games')">
+        <span>🎮</span>
+        <span class="nav-label">Games</span>
+      </button>
+      <button class="nav-btn" onclick="openPanel('widgets')">
+        <span>📊</span>
+        <span class="nav-label">Widgets</span>
+      </button>
+      <button class="nav-btn" onclick="openPanel('settings')">
+        <span>⚙️</span>
+        <span class="nav-label">Customize</span>
+      </button>
+    </div>
+    
+    <!-- Overlay -->
+    <div class="panel-overlay" id="panelOverlay" onclick="closeAllPanels()"></div>
+    
+    <!-- Settings Panel -->
+    <div class="panel" id="settingsPanel">
+      <div class="panel-header">
+        <div class="panel-title">⚙️ Customize</div>
+        <button class="panel-close" onclick="closeAllPanels()">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="section-title">💧 Liquid Type</div>
+        <div class="liquid-grid">
+          <div class="liquid-option selected" data-type="water" onclick="selectLiquid(this, 'water', '💧', 'Water')">
+            <span class="icon">💧</span><span class="name">Water</span>
+          </div>
+          <div class="liquid-option" data-type="lava" onclick="selectLiquid(this, 'lava', '🌋', 'Lava')">
+            <span class="icon">🌋</span><span class="name">Lava</span>
+          </div>
+          <div class="liquid-option" data-type="nebula" onclick="selectLiquid(this, 'nebula', '🌌', 'Nebula')">
+            <span class="icon">🌌</span><span class="name">Nebula</span>
+          </div>
+          <div class="liquid-option" data-type="honey" onclick="selectLiquid(this, 'honey', '🍯', 'Honey')">
+            <span class="icon">🍯</span><span class="name">Honey</span>
+          </div>
+          <div class="liquid-option" data-type="aurora" onclick="selectLiquid(this, 'aurora', '🌈', 'Aurora')">
+            <span class="icon">🌈</span><span class="name">Aurora</span>
+          </div>
+          <div class="liquid-option" data-type="crystal" onclick="selectLiquid(this, 'crystal', '💎', 'Crystal')">
+            <span class="icon">💎</span><span class="name">Crystal</span>
+          </div>
+          <div class="liquid-option" data-type="void" onclick="selectLiquid(this, 'void', '🕳️', 'Void')">
+            <span class="icon">🕳️</span><span class="name">Void</span>
+          </div>
+          <div class="liquid-option" data-type="plasma" onclick="selectLiquid(this, 'plasma', '⚡', 'Plasma')">
+            <span class="icon">⚡</span><span class="name">Plasma</span>
+          </div>
+        </div>
+        
+        <div class="section-title">🎨 Colors</div>
+        <div class="color-row">
+          <div class="color-box">
+            <div class="color-label">Primary</div>
+            <input type="color" class="color-input" id="color1" value="#00b4d8" onchange="updateColors()">
+          </div>
+          <div class="color-box">
+            <div class="color-label">Secondary</div>
+            <input type="color" class="color-input" id="color2" value="#0077b6" onchange="updateColors()">
+          </div>
+        </div>
+        
+        <div class="slider-box">
+          <div class="slider-header"><span>Size</span><span class="slider-val" id="sizeVal">1.0</span></div>
+          <input type="range" id="sizeSlider" min="0.5" max="2" step="0.1" value="1" oninput="updateSize()">
+        </div>
+        
+        <div class="slider-box">
+          <div class="slider-header"><span>Speed</span><span class="slider-val" id="speedVal">0.5</span></div>
+          <input type="range" id="speedSlider" min="0" max="2" step="0.1" value="0.5" oninput="updateSpeed()">
+        </div>
+        
+        <div class="slider-box">
+          <div class="slider-header"><span>Glow</span><span class="slider-val" id="glowVal">0.5</span></div>
+          <input type="range" id="glowSlider" min="0" max="1" step="0.1" value="0.5" oninput="updateGlow()">
+        </div>
+        
+        <button class="btn btn-primary" onclick="randomLiquid()">🎲 Surprise Me</button>
+        <button class="btn" onclick="resetSettings()">🔄 Reset</button>
+      </div>
+    </div>
+    
+    <!-- Widgets Panel -->
+    <div class="panel" id="widgetsPanel">
+      <div class="panel-header">
+        <div class="panel-title">📊 Widgets</div>
+        <button class="panel-close" onclick="closeAllPanels()">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="section-title">Add Widgets</div>
+        <div class="widget-grid">
+          <button class="widget-btn" onclick="addWidget('clock')"><div class="icon">🕐</div><div class="name">Clock</div></button>
+          <button class="widget-btn" onclick="addWidget('weather')"><div class="icon">🌤️</div><div class="name">Weather</div></button>
+          <button class="widget-btn" onclick="addWidget('todo')"><div class="icon">📝</div><div class="name">To-Do</div></button>
+          <button class="widget-btn" onclick="addWidget('timer')"><div class="icon">⏱️</div><div class="name">Timer</div></button>
+          <button class="widget-btn" onclick="addWidget('stopwatch')"><div class="icon">🏃</div><div class="name">Stopwatch</div></button>
+          <button class="widget-btn" onclick="addWidget('notes')"><div class="icon">📒</div><div class="name">Notes</div></button>
+          <button class="widget-btn" onclick="addWidget('habits')"><div class="icon">✅</div><div class="name">Habits</div></button>
+          <button class="widget-btn" onclick="addWidget('moon')"><div class="icon">🌙</div><div class="name">Moon</div></button>
+          <button class="widget-btn" onclick="addWidget('battery')"><div class="icon">🔋</div><div class="name">Battery</div></button>
+        </div>
+        
+        <div class="section-title">Active Widgets</div>
+        <div class="widget-list" id="widgetList">
+          <div style="text-align: center; padding: 30px; color: rgba(255,255,255,0.4);">No widgets yet</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Games Panel -->
+    <div class="panel" id="gamesPanel">
+      <div class="panel-header">
+        <div class="panel-title">🎮 Mini Games</div>
+        <button class="panel-close" onclick="closeAllPanels()">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="game-grid">
+          <div class="game-card" onclick="startGame('fillit')">
+            <div class="icon">🫗</div>
+            <div class="name">Fill It Up</div>
+            <div class="desc">Tap to fill liquid</div>
+          </div>
+          <div class="game-card" onclick="startGame('bubbles')">
+            <div class="icon">🫧</div>
+            <div class="name">Bubble Pop</div>
+            <div class="desc">Pop rising bubbles</div>
+          </div>
+          <div class="game-card" onclick="startGame('colors')">
+            <div class="icon">🎨</div>
+            <div class="name">Color Match</div>
+            <div class="desc">Match the colors</div>
+          </div>
+          <div class="game-card" onclick="startGame('merge')">
+            <div class="icon">⭕</div>
+            <div class="name">Orb Merge</div>
+            <div class="desc">Merge matching orbs</div>
+          </div>
+          <div class="game-card" onclick="startGame('zen')">
+            <div class="icon">🧘</div>
+            <div class="name">Zen Flow</div>
+            <div class="desc">Center the particles</div>
+          </div>
+          <div class="game-card" onclick="startGame('sort')">
+            <div class="icon">🔮</div>
+            <div class="name">Bubble Sort</div>
+            <div class="desc">Sort bubbles</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Stats Panel -->
+    <div class="panel" id="statsPanel">
+      <div class="panel-header">
+        <div class="panel-title">🏆 Stats</div>
+        <button class="panel-close" onclick="closeAllPanels()">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="stat-card">
+          <div class="value" id="statTime">0m</div>
+          <div class="label">Time Spent</div>
+        </div>
+        <div style="height: 15px"></div>
+        <div class="stat-card">
+          <div class="value" id="statGames">0</div>
+          <div class="label">Games Played</div>
+        </div>
+        <div style="height: 15px"></div>
+        <div class="stat-card">
+          <div class="value" id="statWidgets">0</div>
+          <div class="label">Widgets Added</div>
+        </div>
+        <div style="height: 15px"></div>
+        <div class="stat-card">
+          <div class="value" id="statCreates">0</div>
+          <div class="label">Customizations</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast">Saved!</div>
+  </div>
+  
+  <script>
+    // App State
+    let state = {
+      liquidType: 'water',
+      liquidIcon: '💧',
+      liquidName: 'Water',
+      color1: '#00b4d8',
+      color2: '#0077b6',
+      size: 1,
+      speed: 0.5,
+      glow: 0.5,
+      timeSpent: 0,
+      gamesPlayed: 0,
+      widgetsAdded: 0,
+      creations: 0,
+      widgets: [],
+      liquidTypesTried: ['water']
+    };
+    
+    // Load state from localStorage
+    const saved = localStorage.getItem('celestiaflow_state');
+    if (saved) {
+      try { state = JSON.parse(saved); } catch(e) {}
+    }
+    
+    // Save state
+    function save() {
+      localStorage.setItem('celestiaflow_state', JSON.stringify(state));
+    }
+    
+    // Update UI
+    function updateUI() {
+      document.getElementById('liquidIcon').textContent = state.liquidIcon;
+      document.getElementById('liquidName').textContent = state.liquidName;
+      document.getElementById('timeSpent').textContent = formatTime(state.timeSpent);
+      document.getElementById('gamesCount').textContent = state.gamesPlayed;
+      document.getElementById('widgetCount').textContent = state.widgetsAdded;
+      document.getElementById('statTime').textContent = formatTime(state.timeSpent);
+      document.getElementById('statGames').textContent = state.gamesPlayed;
+      document.getElementById('statWidgets').textContent = state.widgetsAdded;
+      document.getElementById('statCreates').textContent = state.creations;
+      
+      // Update liquid options selection
+      document.querySelectorAll('.liquid-option').forEach(el => {
+        el.classList.toggle('selected', el.dataset.type === state.liquidType);
+      });
+      
+      updateWidgetList();
+    }
+    
+    function formatTime(secs) {
+      if (secs < 60) return secs + 's';
+      if (secs < 3600) return Math.floor(secs/60) + 'm';
+      return Math.floor(secs/3600) + 'h ' + Math.floor((secs%3600)/60) + 'm';
+    }
+    
+    // Panel controls
+    function openPanel(name) {
+      closeAllPanels();
+      document.getElementById(name + 'Panel').classList.add('active');
+      document.getElementById('panelOverlay').classList.add('active');
+    }
+    
+    function closeAllPanels() {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panelOverlay').classList.remove('active');
+    }
+    
+    function showHome() {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+    }
+    
+    // Liquid selection
+    function selectLiquid(el, type, icon, name) {
+      document.querySelectorAll('.liquid-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      state.liquidType = type;
+      state.liquidIcon = icon;
+      state.liquidName = name;
+      if (!state.liquidTypesTried.includes(type)) state.liquidTypesTried.push(type);
+      state.creations++;
+      save();
+      updateUI();
+      showToast(name + ' liquid!');
+    }
+    
+    function randomLiquid() {
+      const types = ['water', 'lava', 'nebula', 'honey', 'aurora', 'crystal', 'void', 'plasma'];
+      const icons = { water: '💧', lava: '🌋', nebula: '🌌', honey: '🍯', aurora: '🌈', crystal: '💎', void: '🕳️', plasma: '⚡' };
+      const names = { water: 'Water', lava: 'Lava', nebula: 'Nebula', honey: 'Honey', aurora: 'Aurora', crystal: 'Crystal', void: 'Void', plasma: 'Plasma' };
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      document.querySelectorAll('.liquid-option').forEach(o => o.classList.remove('selected'));
+      document.querySelector(`[data-type="${type}"]`).classList.add('selected');
+      
+      state.liquidType = type;
+      state.liquidIcon = icons[type];
+      state.liquidName = names[type];
+      state.color1 = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');
+      state.color2 = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');
+      state.creations++;
+      
+      if (!state.liquidTypesTried.includes(type)) state.liquidTypesTried.push(type);
+      
+      document.getElementById('color1').value = state.color1;
+      document.getElementById('color2').value = state.color2;
+      
+      save();
+      updateUI();
+      showToast('🎲 Surprise! New liquid!');
+    }
+    
+    // Color/slider updates
+    function updateColors() {
+      state.color1 = document.getElementById('color1').value;
+      state.color2 = document.getElementById('color2').value;
+      state.creations++;
+      save();
+      updateUI();
+    }
+    
+    function updateSize() {
+      const v = document.getElementById('sizeSlider').value;
+      document.getElementById('sizeVal').textContent = v;
+      state.size = parseFloat(v);
+      save();
+    }
+    
+    function updateSpeed() {
+      const v = document.getElementById('speedSlider').value;
+      document.getElementById('speedVal').textContent = v;
+      state.speed = parseFloat(v);
+      save();
+    }
+    
+    function updateGlow() {
+      const v = document.getElementById('glowSlider').value;
+      document.getElementById('glowVal').textContent = v;
+      state.glow = parseFloat(v);
+      save();
+    }
+    
+    function resetSettings() {
+      state = { ...state, liquidType: 'water', liquidIcon: '💧', liquidName: 'Water', color1: '#00b4d8', color2: '#0077b6', size: 1, speed: 0.5, glow: 0.5 };
+      document.querySelectorAll('.liquid-option').forEach(o => o.classList.remove('selected'));
+      document.querySelector('[data-type="water"]').classList.add('selected');
+      document.getElementById('color1').value = '#00b4d8';
+      document.getElementById('color2').value = '#0077b6';
+      document.getElementById('sizeSlider').value = 1;
+      document.getElementById('speedSlider').value = 0.5;
+      document.getElementById('glowSlider').value = 0.5;
+      document.getElementById('sizeVal').textContent = '1.0';
+      document.getElementById('speedVal').textContent = '0.5';
+      document.getElementById('glowVal').textContent = '0.5';
+      save();
+      updateUI();
+      showToast('🔄 Reset!');
+    }
+    
+    // Widget functions
+    function addWidget(type) {
+      const names = { clock: 'Clock', weather: 'Weather', todo: 'To-Do', timer: 'Timer', stopwatch: 'Stopwatch', notes: 'Notes', habits: 'Habits', moon: 'Moon Phase', battery: 'Battery' };
+      const icons = { clock: '🕐', weather: '🌤️', todo: '📝', timer: '⏱️', stopwatch: '🏃', notes: '📒', habits: '✅', moon: '🌙', battery: '🔋' };
+      
+      state.widgets.push({ id: Date.now(), type, name: names[type], icon: icons[type] });
+      state.widgetsAdded++;
+      save();
+      updateUI();
+      showToast(names[type] + ' added!');
+    }
+    
+    function removeWidget(id) {
+      state.widgets = state.widgets.filter(w => w.id !== id);
+      state.widgetsAdded = Math.max(0, state.widgetsAdded - 1);
+      save();
+      updateUI();
+    }
+    
+    function updateWidgetList() {
+      const list = document.getElementById('widgetList');
+      if (state.widgets.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 30px; color: rgba(255,255,255,0.4);">No widgets yet</div>';
+      } else {
+        list.innerHTML = state.widgets.map(w => `
+          <div class="widget-item">
+            <div class="widget-info"><span class="icon">${w.icon}</span><span>${w.name}</span></div>
+            <button class="widget-del" onclick="removeWidget(${w.id})">✕</button>
+          </div>
+        `).join('');
+      }
+    }
+    
+    // Game functions
+    function startGame(game) {
+      state.gamesPlayed++;
+      save();
+      updateUI();
+      showToast('🎮 ' + game.toUpperCase() + ' started!');
+    }
+    
+    // Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+    
+    // Track time
+    setInterval(() => {
+      state.timeSpent++;
+      save();
+      document.getElementById('timeSpent').textContent = formatTime(state.timeSpent);
+      document.getElementById('statTime').textContent = formatTime(state.timeSpent);
+    }, 1000);
+    
+    // Init
+    updateUI();
+    
+    // Settings button
+    document.getElementById('settingsBtn').onclick = () => openPanel('settings');
+  </script>
+</body>
+</html>

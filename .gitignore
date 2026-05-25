@@ -1,0 +1,4 @@
+*.apk
+*.dat
+android/app/build
+android/.gradle
