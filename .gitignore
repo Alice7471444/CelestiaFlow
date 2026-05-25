@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*.apk
+android/app/src/main/assets/textures/*.dat
+android/app/src/main/assets/audio/*.dat
+android/app/src/main/assets/images/*.dat
+android/app/src/main/assets/shaders/*.dat
