@@ -131,6 +131,8 @@ interface AppState {
   // Performance
   qualityPreset: 'low' | 'medium' | 'high';
   showPerformanceStats: boolean;
+  scrollY: number;
+  setScrollY: (y: number) => void;
   
   // Actions
   setLiquidType: (type: LiquidType) => void;
@@ -286,6 +288,8 @@ export const useStore = create<AppState>()(
       qualityPreset: 'high',
       showPerformanceStats: false,
       
+      scrollY: 0,
+      setScrollY: (scrollY) => set({ scrollY }),
       // Actions
       setLiquidType: (type) => set(() => {
         const colors = defaultColors[type] || ['#4FC3F7', '#0288D1'];
