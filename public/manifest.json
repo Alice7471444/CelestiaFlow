@@ -1,0 +1,19 @@
+{
+  "name": "CelestiaFlow",
+  "short_name": "CelestiaFlow",
+  "description": "A Liquid Glass Customizable Experience",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a1a",
+  "theme_color": "#0a0a1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment", "lifestyle", "utilities"]
+}
